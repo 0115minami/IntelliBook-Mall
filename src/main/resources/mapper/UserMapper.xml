@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.intellibookmallapi.mapper.UserMapper">
+    
+    <resultMap id="BaseResultMap" type="org.example.intellibookmallapi.entity.User">
+        <id column="user_id" property="userId" />
+        <result column="username" property="username" />
+        <result column="password" property="password" />
+        <result column="email" property="email" />
+        <result column="nickname" property="nickname" />
+        <result column="is_admin" property="isAdmin" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        <![CDATA[`user_id`, `username`, `password`, `email`, `nickname`, `is_admin`, `create_time`]]>
+    </sql>
+    
+    <!-- 根据主键查询 -->
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM tb_user
+        WHERE `user_id` = #{userId}
+    </select>
+    
+    <!-- 根据用户名查询 -->
+    <select id="selectByUsername" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM tb_user
+        WHERE `username` = #{username}
+    </select>
+    
+    <!-- 插入用户 -->
+    <insert id="insert" parameterType="org.example.intellibookmallapi.entity.User" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO tb_user (`username`, `password`, `email`, `nickname`, `is_admin`, `create_time`)
+        VALUES (#{username}, #{password}, #{email}, #{nickname}, #{isAdmin}, #{createTime})
+    </insert>
+    
+    <!-- 更新用户信息 -->
+    <update id="updateByPrimaryKeySelective" parameterType="org.example.intellibookmallapi.entity.User">
+        UPDATE tb_user
+        <set>
+            <if test="username != null">`username` = #{username},</if>
+            <if test="password != null">`password` = #{password},</if>
+            <if test="email != null">`email` = #{email},</if>
+            <if test="nickname != null">`nickname` = #{nickname},</if>
+        </set>
+        WHERE `user_id` = #{userId}
+    </update>
+    
+</mapper>
