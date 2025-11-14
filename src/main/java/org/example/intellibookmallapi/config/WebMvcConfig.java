@@ -33,8 +33,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")  // 拦截所有API请求
                 .excludePathPatterns(
+                        // 用户相关 - 无需登录
                         "/api/v1/user/register",  // 排除注册接口
-                        "/api/v1/user/login"      // 排除登录接口
+                        "/api/v1/user/login",     // 排除登录接口
+                        
+                        // 电子书相关 - 无需登录（公开访问）
+                        "/api/ebooks/**",         // 所有电子书查询接口
+                        
+                        // 分类相关 - 无需登录（公开访问）
+                        "/api/categories/**"      // 所有分类查询接口
                 );
     }
     

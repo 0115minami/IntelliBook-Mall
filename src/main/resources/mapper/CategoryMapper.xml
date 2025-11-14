@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.intellibookmallapi.mapper.CategoryMapper">
+    
+    <!-- 分类结果映射 -->
+    <resultMap id="CategoryResultMap" type="org.example.intellibookmallapi.entity.Category">
+        <id column="category_id" property="categoryId" />
+        <result column="category_name" property="categoryName" />
+        <result column="category_name_en" property="categoryNameEn" />
+        <result column="parent_id" property="parentId" />
+        <result column="category_level" property="categoryLevel" />
+        <result column="sort_order" property="sortOrder" />
+        <!-- 关联字段 -->
+        <result column="parent_name" property="parentName" />
+        <result column="book_count" property="bookCount" />
+    </resultMap>
+    
+    <!-- 分类树结果映射（包含子分类） -->
+    <resultMap id="CategoryTreeResultMap" type="org.example.intellibookmallapi.entity.Category">
+        <id column="category_id" property="categoryId" />
+        <result column="category_name" property="categoryName" />
+        <result column="category_name_en" property="categoryNameEn" />
+        <result column="parent_id" property="parentId" />
+        <result column="category_level" property="categoryLevel" />
+        <result column="sort_order" property="sortOrder" />
+        <result column="book_count" property="bookCount" />
+        <!-- 子分类集合 -->
+        <collection property="children" ofType="org.example.intellibookmallapi.entity.Category">
+            <id column="child_category_id" property="categoryId" />
+            <result column="child_category_name" property="categoryName" />
+            <result column="child_category_name_en" property="categoryNameEn" />
+            <result column="child_parent_id" property="parentId" />
+            <result column="child_category_level" property="categoryLevel" />
+            <result column="child_sort_order" property="sortOrder" />
+            <result column="child_book_count" property="bookCount" />
+        </collection>
+    </resultMap>
+    
+    <!-- 基础查询字段 -->
+    <sql id="Base_Column_List">
+        c.category_id, c.category_name, c.category_name_en, c.parent_id,
+        c.category_level, c.sort_order
+    </sql>
+    
+    <!-- 根据主键查询分类 -->
+    <select id="selectByPrimaryKey" resultMap="CategoryResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />,
+            p.category_name as parent_name
+        FROM tb_category c
+        LEFT JOIN tb_category p ON c.parent_id = p.category_id
+        WHERE c.category_id = #{categoryId}
+    </select>
+    
+    <!-- 查询所有一级分类 -->
+    <select id="selectFirstLevelCategories" resultMap="CategoryResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />,
+            COUNT(e.book_id) as book_count
+        FROM tb_category c
+        LEFT JOIN tb_ebook e ON c.category_id = e.category_id AND e.status = 1
+        WHERE c.category_level = 1
+        GROUP BY c.category_id
+        ORDER BY c.sort_order DESC, c.category_id ASC
+    </select>
+    
+    <!-- 根据父分类ID查询子分类 -->
+    <select id="selectByParentId" resultMap="CategoryResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />,
+            COUNT(e.book_id) as book_count
+        FROM tb_category c
+        LEFT JOIN tb_ebook e ON c.category_id = e.category_id AND e.status = 1
+        WHERE c.parent_id = #{parentId}
+        GROUP BY c.category_id
+        ORDER BY c.sort_order DESC, c.category_id ASC
+    </select>
+    
+    <!-- 查询所有分类 -->
+    <select id="selectAll" resultMap="CategoryResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />
+        FROM tb_category c
+        ORDER BY c.category_level ASC, c.sort_order DESC, c.category_id ASC
+    </select>
+    
+    <!-- 查询所有一级分类（带电子书数量） -->
+    <select id="selectTopLevelCategories" resultMap="CategoryResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />,
+            COUNT(e.book_id) as book_count
+        FROM tb_category c
+        LEFT JOIN tb_ebook e ON c.category_id = e.category_id AND e.status = 1
+        WHERE c.category_level = 1
+        GROUP BY c.category_id
+        ORDER BY c.sort_order DESC, c.category_id ASC
+    </select>
+    
+    <!-- 查询指定父分类下的子分类（带电子书数量） -->
+    <select id="selectCategoriesByParentId" resultMap="CategoryResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />,
+            COUNT(e.book_id) as book_count
+        FROM tb_category c
+        LEFT JOIN tb_ebook e ON c.category_id = e.category_id AND e.status = 1
+        WHERE c.parent_id = #{parentId}
+        GROUP BY c.category_id
+        ORDER BY c.sort_order DESC, c.category_id ASC
+    </select>
+    
+    <!-- 查询分类树 -->
+    <select id="selectCategoryTree" resultMap="CategoryTreeResultMap">
+        SELECT 
+            -- 父分类信息
+            p.category_id,
+            p.category_name,
+            p.category_name_en,
+            p.parent_id,
+            p.category_level,
+            p.sort_order,
+            COUNT(DISTINCT pe.book_id) as book_count,
+            -- 子分类信息
+            c.category_id as child_category_id,
+            c.category_name as child_category_name,
+            c.category_name_en as child_category_name_en,
+            c.parent_id as child_parent_id,
+            c.category_level as child_category_level,
+            c.sort_order as child_sort_order,
+            COUNT(DISTINCT ce.book_id) as child_book_count
+        FROM tb_category p
+        LEFT JOIN tb_category c ON p.category_id = c.parent_id
+        LEFT JOIN tb_ebook pe ON p.category_id = pe.category_id AND pe.status = 1
+        LEFT JOIN tb_ebook ce ON c.category_id = ce.category_id AND ce.status = 1
+        WHERE p.category_level = 1
+        GROUP BY p.category_id, c.category_id
+        ORDER BY p.sort_order DESC, p.category_id ASC, c.sort_order DESC, c.category_id ASC
+    </select>
+    
+    <!-- 查询热门分类 -->
+    <select id="selectPopularCategories" resultMap="CategoryResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />,
+            COUNT(e.book_id) as book_count
+        FROM tb_category c
+        LEFT JOIN tb_ebook e ON c.category_id = e.category_id AND e.status = 1
+        GROUP BY c.category_id
+        HAVING book_count > 0
+        ORDER BY book_count DESC, c.sort_order DESC
+        LIMIT #{limit}
+    </select>
+    
+    <!-- 根据分类名称搜索分类 -->
+    <select id="searchCategoriesByName" resultMap="CategoryResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />,
+            p.category_name as parent_name,
+            COUNT(e.book_id) as book_count
+        FROM tb_category c
+        LEFT JOIN tb_category p ON c.parent_id = p.category_id
+        LEFT JOIN tb_ebook e ON c.category_id = e.category_id AND e.status = 1
+        WHERE c.category_name LIKE CONCAT('%', #{categoryName}, '%')
+           OR c.category_name_en LIKE CONCAT('%', #{categoryName}, '%')
+        GROUP BY c.category_id
+        ORDER BY c.category_level ASC, c.sort_order DESC
+    </select>
+    
+    <!-- 查询分类路径 -->
+    <select id="selectCategoryPath" resultMap="CategoryResultMap">
+        WITH RECURSIVE category_path AS (
+            -- 起始分类
+            SELECT 
+                <include refid="Base_Column_List" />,
+                0 as path_level
+            FROM tb_category c
+            WHERE c.category_id = #{categoryId}
+            
+            UNION ALL
+            
+            -- 递归查找父分类
+            SELECT 
+                p.category_id, p.category_name, p.category_name_en, p.parent_id,
+                p.category_level, p.sort_order,
+                cp.path_level + 1
+            FROM tb_category p
+            INNER JOIN category_path cp ON p.category_id = cp.parent_id
+            WHERE p.parent_id != 0
+        )
+        SELECT 
+            category_id, category_name, category_name_en, parent_id,
+            category_level, sort_order
+        FROM category_path
+        ORDER BY path_level DESC
+    </select>
+    
+</mapper>
