@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.intellibookmallapi.mapper.FavoriteMapper">
+    
+    <!-- 收藏结果映射 -->
+    <resultMap id="FavoriteResultMap" type="org.example.intellibookmallapi.entity.Favorite">
+        <id column="favorite_id" property="favoriteId" />
+        <result column="user_id" property="userId" />
+        <result column="book_id" property="bookId" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+    
+    <!-- 收藏VO结果映射（包含书籍信息） -->
+    <resultMap id="FavoriteVOResultMap" type="org.example.intellibookmallapi.dto.FavoriteVO">
+        <result column="favorite_id" property="favoriteId" />
+        <result column="book_id" property="bookId" />
+        <result column="book_title" property="bookTitle" />
+        <result column="author" property="author" />
+        <result column="cover_img" property="coverImg" />
+        <result column="price" property="price" />
+        <result column="category_id" property="categoryId" />
+        <result column="category_name" property="categoryName" />
+        <result column="rating" property="rating" />
+        <result column="language" property="language" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+    
+    <!-- 添加收藏 -->
+    <insert id="insert" parameterType="org.example.intellibookmallapi.entity.Favorite">
+        INSERT INTO tb_favorite (user_id, book_id, create_time)
+        VALUES (#{userId}, #{bookId}, CURRENT_TIMESTAMP)
+    </insert>
+    
+    <!-- 根据用户ID和书籍ID查询收藏 -->
+    <select id="selectByUserIdAndBookId" resultMap="FavoriteResultMap">
+        SELECT favorite_id, user_id, book_id, create_time
+        FROM tb_favorite
+        WHERE user_id = #{userId} AND book_id = #{bookId}
+    </select>
+    
+    <!-- 查询用户的收藏列表（分页，包含书籍详细信息） -->
+    <select id="selectFavoriteListByUserId" resultMap="FavoriteVOResultMap">
+        SELECT 
+            f.favorite_id,
+            f.book_id,
+            e.book_title,
+            e.author,
+            e.cover_img,
+            e.price,
+            e.category_id,
+            c.category_name,
+            e.rating,
+            e.language,
+            f.create_time
+        FROM tb_favorite f
+        INNER JOIN tb_ebook e ON f.book_id = e.book_id
+        LEFT JOIN tb_category c ON e.category_id = c.category_id
+        WHERE f.user_id = #{userId}
+          AND e.status = 1
+        ORDER BY f.create_time DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+    
+    <!-- 统计用户的收藏数量 -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_favorite f
+        INNER JOIN tb_ebook e ON f.book_id = e.book_id
+        WHERE f.user_id = #{userId}
+          AND e.status = 1
+    </select>
+    
+    <!-- 删除收藏 -->
+    <delete id="deleteByUserIdAndBookId">
+        DELETE FROM tb_favorite
+        WHERE user_id = #{userId} AND book_id = #{bookId}
+    </delete>
+    
+    <!-- 检查是否已收藏 -->
+    <select id="checkFavorite" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_favorite
+        WHERE user_id = #{userId} AND book_id = #{bookId}
+    </select>
+    
+</mapper>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.intellibookmallapi.mapper.CartMapper">
+    
+    <!-- 购物车结果映射 -->
+    <resultMap id="CartResultMap" type="org.example.intellibookmallapi.entity.Cart">
+        <id column="cart_id" property="cartId" />
+        <result column="user_id" property="userId" />
+        <result column="book_id" property="bookId" />
+        <result column="is_deleted" property="isDeleted" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+    
+    <!-- 购物车VO结果映射（包含书籍信息） -->
+    <resultMap id="CartVOResultMap" type="org.example.intellibookmallapi.dto.CartVO">
+        <result column="cart_id" property="cartId" />
+        <result column="book_id" property="bookId" />
+        <result column="book_title" property="bookTitle" />
+        <result column="author" property="author" />
+        <result column="cover_img" property="coverImg" />
+        <result column="price" property="price" />
+        <result column="category_id" property="categoryId" />
+        <result column="category_name" property="categoryName" />
+        <result column="language" property="language" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+    
+    <!-- 添加到购物车 -->
+    <insert id="insert" parameterType="org.example.intellibookmallapi.entity.Cart">
+        INSERT INTO tb_cart (user_id, book_id, is_deleted, create_time, update_time)
+        VALUES (#{userId}, #{bookId}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+    
+    <!-- 根据用户ID和书籍ID查询购物车项 -->
+    <select id="selectByUserIdAndBookId" resultMap="CartResultMap">
+        SELECT cart_id, user_id, book_id, is_deleted, create_time, update_time
+        FROM tb_cart
+        WHERE user_id = #{userId} AND book_id = #{bookId}
+    </select>
+    
+    <!-- 查询用户的购物车列表（包含书籍详细信息） -->
+    <select id="selectCartListByUserId" resultMap="CartVOResultMap">
+        SELECT 
+            c.cart_id,
+            c.book_id,
+            e.book_title,
+            e.author,
+            e.cover_img,
+            e.price,
+            e.category_id,
+            cat.category_name,
+            e.language,
+            e.status,
+            c.create_time
+        FROM tb_cart c
+        INNER JOIN tb_ebook e ON c.book_id = e.book_id
+        LEFT JOIN tb_category cat ON e.category_id = cat.category_id
+        WHERE c.user_id = #{userId} 
+          AND c.is_deleted = 0
+          AND e.is_deleted = 0
+        ORDER BY c.create_time DESC
+    </select>
+    
+    <!-- 根据购物车ID删除 -->
+    <delete id="deleteByCartId">
+        UPDATE tb_cart 
+        SET is_deleted = 1, update_time = CURRENT_TIMESTAMP
+        WHERE cart_id = #{cartId}
+    </delete>
+    
+    <!-- 根据用户ID和购物车ID删除（确保用户只能删除自己的购物车项） -->
+    <delete id="deleteByUserIdAndCartId">
+        UPDATE tb_cart 
+        SET is_deleted = 1, update_time = CURRENT_TIMESTAMP
+        WHERE user_id = #{userId} AND cart_id = #{cartId}
+    </delete>
+    
+    <!-- 清空用户的购物车 -->
+    <delete id="deleteByUserId">
+        UPDATE tb_cart 
+        SET is_deleted = 1, update_time = CURRENT_TIMESTAMP
+        WHERE user_id = #{userId} AND is_deleted = 0
+    </delete>
+    
+    <!-- 统计用户购物车中的商品数量 -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_cart c
+        INNER JOIN tb_ebook e ON c.book_id = e.book_id
+        WHERE c.user_id = #{userId} 
+          AND c.is_deleted = 0
+          AND e.is_deleted = 0
+          AND e.status = 1
+    </select>
+    
+    <!-- 恢复已删除的购物车项（软删除恢复） -->
+    <update id="restoreByUserIdAndBookId">
+        UPDATE tb_cart 
+        SET is_deleted = 0, update_time = CURRENT_TIMESTAMP
+        WHERE user_id = #{userId} AND book_id = #{bookId} AND is_deleted = 1
+    </update>
+    
+</mapper>

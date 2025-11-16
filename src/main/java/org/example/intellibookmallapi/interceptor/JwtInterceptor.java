@@ -37,7 +37,18 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
         
         // 从Header获取Token
+        // 支持两种格式：
+        // 1. token: {token}
+        // 2. Authorization: Bearer {token}
         String token = request.getHeader("token");
+        
+        if (token == null || token.isEmpty()) {
+            // 尝试从Authorization头获取
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7); // 移除 "Bearer " 前缀
+            }
+        }
         
         if (token == null || token.isEmpty()) {
             throw new BusinessException("请先登录");

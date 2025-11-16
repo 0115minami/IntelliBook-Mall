@@ -32,6 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### Kiro IDE ###
+.kiro/
+
 ### 电子书存储目录 ###
 # 忽略实际的电子书文件和封面图片，但保留目录结构
 ebook-storage/**/*
