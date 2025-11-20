@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.intellibookmallapi.mapper.ReviewLikeMapper">
+    
+    <!-- Result Map -->
+    <resultMap id="BaseResultMap" type="org.example.intellibookmallapi.entity.ReviewLike">
+        <id column="like_id" property="likeId" />
+        <result column="user_id" property="userId" />
+        <result column="review_id" property="reviewId" />
+        <result column="create_time" property="createTime" 
+                typeHandler="org.example.intellibookmallapi.config.SqliteLocalDateTimeTypeHandler" />
+    </resultMap>
+    
+    <!-- 插入点赞记录 -->
+    <insert id="insert" parameterType="org.example.intellibookmallapi.entity.ReviewLike" 
+            useGeneratedKeys="true" keyProperty="likeId">
+        INSERT INTO tb_review_like (user_id, review_id)
+        VALUES (#{userId}, #{reviewId})
+    </insert>
+    
+    <!-- 查询用户是否已点赞 -->
+    <select id="selectByUserIdAndReviewId" resultMap="BaseResultMap">
+        SELECT like_id, user_id, review_id, create_time
+        FROM tb_review_like
+        WHERE user_id = #{userId} AND review_id = #{reviewId}
+    </select>
+    
+    <!-- 删除点赞记录 -->
+    <delete id="deleteByUserIdAndReviewId">
+        DELETE FROM tb_review_like
+        WHERE user_id = #{userId} AND review_id = #{reviewId}
+    </delete>
+    
+</mapper>

@@ -41,7 +41,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/ebooks/**",         // 所有电子书查询接口
                         
                         // 分类相关 - 无需登录（公开访问）
-                        "/api/categories/**"      // 所有分类查询接口
+                        "/api/categories/**",     // 所有分类查询接口
+                        
+                        // 评价相关 - 查看评价无需登录（公开访问）
+                        "/api/review/book/**"     // 查看书籍评价列表
                 );
     }
     
@@ -76,7 +79,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
                                          ModelAndViewContainer mavContainer,
                                          NativeWebRequest webRequest, 
                                          WebDataBinderFactory binderFactory) {
-                return webRequest.getAttribute("currentUser", RequestAttributes.SCOPE_REQUEST);
+                // 获取注解
+                TokenToUser annotation = parameter.getParameterAnnotation(TokenToUser.class);
+                User user = (User) webRequest.getAttribute("currentUser", RequestAttributes.SCOPE_REQUEST);
+                
+                // 如果required=false且用户为null，返回null而不抛异常
+                if (annotation != null && !annotation.required() && user == null) {
+                    return null;
+                }
+                
+                return user;
             }
         });
     }

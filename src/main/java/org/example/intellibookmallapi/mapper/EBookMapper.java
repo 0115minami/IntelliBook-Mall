@@ -99,4 +99,11 @@ public interface EBookMapper {
     List<EBook> selectEBooksByTag(@Param("tag") String tag, 
                                   @Param("excludeBookId") Long excludeBookId, 
                                   @Param("limit") Integer limit);
+    
+    /**
+     * 更新书籍评分和评价数量
+     */
+    int updateRating(@Param("bookId") Long bookId, 
+                     @Param("rating") Double rating, 
+                     @Param("ratingCount") Integer ratingCount);
 }

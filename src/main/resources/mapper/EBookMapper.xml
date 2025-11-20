@@ -195,4 +195,13 @@
         ORDER BY e.create_time DESC
     </select>
     
+    <!-- 更新书籍评分和评价数量 -->
+    <update id="updateRating">
+        UPDATE tb_ebook
+        SET rating = #{rating},
+            rating_count = #{ratingCount},
+            update_time = CURRENT_TIMESTAMP
+        WHERE book_id = #{bookId}
+    </update>
+    
 </mapper>

@@ -12,4 +12,9 @@ import java.lang.annotation.Target;
 @Target({ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TokenToUser {
+    /**
+     * 是否必须登录，默认为true
+     * 如果设置为false，则在未登录时返回null而不是抛出异常
+     */
+    boolean required() default true;
 }
