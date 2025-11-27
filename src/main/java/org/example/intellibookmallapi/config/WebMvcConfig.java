@@ -44,7 +44,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/categories/**",     // 所有分类查询接口
                         
                         // 评价相关 - 查看评价无需登录（公开访问）
-                        "/api/review/book/**"     // 查看书籍评价列表
+                        "/api/review/book/**",    // 查看书籍评价列表
+                        
+                        // 文件服务 - 无需登录（公开访问）
+                        "/files/**"               // 封面图片和电子书文件下载
                 );
     }
     
