@@ -33,6 +33,11 @@ public interface CategoryMapper {
     List<Category> selectAll();
     
     /**
+     * 查询所有分类（带电子书数量）
+     */
+    List<Category> selectAllCategories();
+    
+    /**
      * 查询所有一级分类（带电子书数量）
      */
     List<Category> selectTopLevelCategories();

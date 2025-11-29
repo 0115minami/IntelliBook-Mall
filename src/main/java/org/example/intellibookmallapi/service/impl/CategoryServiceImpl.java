@@ -19,6 +19,11 @@ public class CategoryServiceImpl implements CategoryService {
     private CategoryMapper categoryMapper;
     
     @Override
+    public List<Category> getAllCategories() {
+        return categoryMapper.selectAllCategories();
+    }
+    
+    @Override
     public Category getCategoryById(Long categoryId) {
         if (categoryId == null || categoryId <= 0) {
             throw new BusinessException("分类ID不能为空");

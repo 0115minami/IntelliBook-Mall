@@ -84,6 +84,19 @@
         ORDER BY c.category_level ASC, c.sort_order DESC, c.category_id ASC
     </select>
     
+    <!-- 查询所有分类（带电子书数量） -->
+    <select id="selectAllCategories" resultMap="CategoryResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />,
+            p.category_name as parent_name,
+            COUNT(e.book_id) as book_count
+        FROM tb_category c
+        LEFT JOIN tb_category p ON c.parent_id = p.category_id
+        LEFT JOIN tb_ebook e ON c.category_id = e.category_id AND e.status = 1
+        GROUP BY c.category_id
+        ORDER BY c.category_level ASC, c.sort_order DESC, c.category_id ASC
+    </select>
+    
     <!-- 查询所有一级分类（带电子书数量） -->
     <select id="selectTopLevelCategories" resultMap="CategoryResultMap">
         SELECT 
