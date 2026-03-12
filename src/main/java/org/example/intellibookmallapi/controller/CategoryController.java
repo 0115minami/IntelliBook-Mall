@@ -20,16 +20,6 @@ public class CategoryController {
     private CategoryService categoryService;
     
     /**
-     * 获取所有分类（扁平列表）
-     * GET /api/categories
-     */
-    @GetMapping
-    public Result<List<Category>> getAllCategories() {
-        List<Category> categories = categoryService.getAllCategories();
-        return ResultGenerator.genSuccessResult(categories);
-    }
-    
-    /**
      * 根据ID查询分类
      * GET /api/categories/{categoryId}
      */

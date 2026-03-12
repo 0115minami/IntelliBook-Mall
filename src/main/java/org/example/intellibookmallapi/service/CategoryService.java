@@ -10,12 +10,6 @@ import java.util.List;
 public interface CategoryService {
     
     /**
-     * 获取所有分类（扁平列表）
-     * @return 所有分类列表
-     */
-    List<Category> getAllCategories();
-    
-    /**
      * 根据ID查询分类
      * @param categoryId 分类ID
      * @return 分类信息

@@ -55,12 +55,7 @@
                 )
             </if>
             <if test="param.categoryId != null">
-                AND (
-                    e.category_id = #{param.categoryId}
-                    OR e.category_id IN (
-                        SELECT category_id FROM tb_category WHERE parent_id = #{param.categoryId}
-                    )
-                )
+                AND e.category_id = #{param.categoryId}
             </if>
             <if test="param.language != null and param.language.trim() != ''">
                 AND e.language = #{param.language}
@@ -139,36 +134,24 @@
         LIMIT #{limit}
     </select>
     
-    <!-- 根据分类查询电子书（支持一级分类查询所有子分类的书籍） -->
+    <!-- 根据分类查询电子书 -->
     <select id="selectEBooksByCategory" resultMap="EBookResultMap">
         SELECT 
             <include refid="Detail_Column_List" />
         FROM tb_ebook e
         LEFT JOIN tb_category c ON e.category_id = c.category_id
         LEFT JOIN tb_ebook_file ef ON e.book_id = ef.book_id
-        WHERE e.status = 1
-        AND (
-            e.category_id = #{categoryId}
-            OR e.category_id IN (
-                SELECT category_id FROM tb_category WHERE parent_id = #{categoryId}
-            )
-        )
+        WHERE e.category_id = #{categoryId} AND e.status = 1
         GROUP BY e.book_id
         ORDER BY e.create_time DESC
         LIMIT #{offset}, #{limit}
     </select>
     
-    <!-- 统计分类下的电子书数量（支持一级分类统计所有子分类的书籍） -->
+    <!-- 统计分类下的电子书数量 -->
     <select id="countEBooksByCategory" resultType="java.lang.Long">
         SELECT COUNT(*)
         FROM tb_ebook e
-        WHERE e.status = 1
-        AND (
-            e.category_id = #{categoryId}
-            OR e.category_id IN (
-                SELECT category_id FROM tb_category WHERE parent_id = #{categoryId}
-            )
-        )
+        WHERE e.category_id = #{categoryId} AND e.status = 1
     </select>
     
     <!-- 根据标签查询相关电子书 -->
