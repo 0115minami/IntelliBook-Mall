@@ -1,7 +1,9 @@
 -- ============================================
--- 电子书数据初始化脚本（修正版）
+-- 电子书数据初始化脚本（更新版）
 -- 符合 IntelliBook-Mall 表结构设计
 -- 注意：需要先执行 03_minimal_required_data.sql 初始化分类数据
+-- 文件存储结构：ebook-storage/books/{format}/{book_id}.{format}
+-- 封面存储结构：ebook-storage/covers/{book_id}.jpg
 -- ============================================
 
 -- 插入电子书数据（符合 tb_ebook 表结构）
@@ -48,37 +50,74 @@ INSERT INTO tb_ebook (book_title, author, isbn, publisher, publish_date, book_in
 -- 8. 茹素之乐 (生活健康 > 美食烹饪，category_id=34)
 ('茹素之乐: 美味素食菜谱100例', '亚历克斯·巴拉克斯', NULL, '浙江出版联合集团', '2020-01-01',
  '100道令人垂涎欲滴的素食菜谱，为您的生活带去奇妙的转变。健康、美味、环保的素食生活方式指南。',
- 34, 'covers/8.jpg', 180, 3800, 'zh-CN', '素食,菜谱,健康饮食,烹饪', 4.3, 289, 1);
+ 34, 'covers/8.jpg', 180, 3800, 'zh-CN', '素食,菜谱,健康饮食,烹饪', 4.3, 289, 1),
+
+-- 9. Git for Teams (计算机 > 前端开发，category_id=12)
+('Git for Teams: A User-Centered Approach to Creating Efficient Workflows in Git', 'Emma Jane Hogbin Westby', '9781491911181', 
+ 'O''Reilly Media', '2015-10-01',
+ 'Learn how to use Git in a team environment. This book provides practical strategies for managing Git workflows and collaboration.',
+ 12, 'covers/9.jpg', 368, 4500, 'en-US', 'Git,Version Control,Team Collaboration,DevOps', 4.3, 234, 1),
+
+-- 10. 幽灵塔 (文学 > 悬疑推理，category_id=20)
+('幽灵塔', '江户川乱步', '9787561352489', '陕西师范大学出版总社有限公司', '2012-06-01',
+ '日本推理小说之父江户川乱步的经典作品，讲述了一个充满悬疑和恐怖的推理故事。',
+ 20, 'covers/10.jpg', 288, 3200, 'zh-CN', '江户川乱步,推理小说,悬疑,日本文学', 4.4, 1567, 1),
+
+-- 11. 小说写作：叙事技巧指南 (教育 > 职业技能，category_id=31)
+('小说写作：叙事技巧指南', '珍妮特·伯罗薇', '9787300189437', '中国人民大学出版社', '2014-09-01',
+ '一本全面系统的小说写作指南，从叙事技巧、人物塑造到情节构建，帮助写作者提升创作能力。',
+ 31, 'covers/11.jpg', 432, 5200, 'zh-CN', '写作技巧,小说创作,叙事,文学创作', 4.6, 678, 1),
+
+-- 12. 东京梦华录 (历史人文 > 历史，category_id=6)
+('东京梦华录', '杨春俏', '9787101089523', '中华书局', '2013-01-01',
+ '北宋孟元老所著，记录了北宋都城东京（今开封）的城市风貌、市井生活和民俗风情，是研究宋代社会的重要文献。',
+ 6, 'covers/12.jpg', 256, 3600, 'zh-CN', '宋代,历史,东京,民俗,古籍', 4.5, 892, 1);
 
 -- 插入电子书文件数据（符合 tb_ebook_file 表结构）
--- 注意：file_path 使用数字命名，与实际文件对应
+-- 注意：file_path 格式为 books/{format}/{book_id}.{format}
+-- 根据 ebook-storage 目录实际文件结构配置
 INSERT INTO tb_ebook_file (book_id, file_format, file_path, file_size) VALUES
--- 书籍1 - EPUB
-(1, 'EPUB', 'books/epub/1.epub', 12345600),
+-- 书籍1 - PDF, EPUB
+(1, 'PDF', 'books/pdf/1.pdf', 12345600),
+(1, 'EPUB', 'books/epub/1.epub', 10234500),
 
 -- 书籍2 - EPUB
 (2, 'EPUB', 'books/epub/2.epub', 3456700),
 
--- 书籍3 - 暂无文件（可后续添加）
+-- 书籍3 - PDF
+(3, 'PDF', 'books/pdf/3.pdf', 8765400),
 
--- 书籍4 - EPUB, MOBI
+-- 书籍4 - PDF, EPUB
+(4, 'PDF', 'books/pdf/4.pdf', 20123400),
 (4, 'EPUB', 'books/epub/4.epub', 18765400),
-(4, 'MOBI', 'books/mobi/4.mobi', 21234500),
 
--- 书籍5 - EPUB, MOBI
+-- 书籍5 - PDF, EPUB
+(5, 'PDF', 'books/pdf/5.pdf', 6234500),
 (5, 'EPUB', 'books/epub/5.epub', 5678900),
-(5, 'MOBI', 'books/mobi/5.mobi', 6789000),
 
--- 书籍6 - EPUB
+-- 书籍6 - PDF, EPUB
+(6, 'PDF', 'books/pdf/6.pdf', 5123400),
 (6, 'EPUB', 'books/epub/6.epub', 4567800),
 
--- 书籍7 - EPUB
+-- 书籍7 - PDF, EPUB
+(7, 'PDF', 'books/pdf/7.pdf', 17234500),
 (7, 'EPUB', 'books/epub/7.epub', 15678900),
 
 -- 书籍8 - EPUB
-(8, 'EPUB', 'books/epub/8.epub', 8765400);
+(8, 'EPUB', 'books/epub/8.epub', 8765400),
+
+-- 书籍9 - PDF
+(9, 'PDF', 'books/pdf/9.pdf', 9876500),
+
+-- 书籍10 - EPUB
+(10, 'EPUB', 'books/epub/10.epub', 6543200),
+
+-- 书籍11 - PDF, EPUB
+(11, 'PDF', 'books/pdf/11.pdf', 11234500),
+(11, 'EPUB', 'books/epub/11.epub', 9876500);
 
 -- 数据插入完成
 SELECT '=== 电子书数据初始化完成 ===' AS info;
 SELECT '电子书数量: ' || COUNT(*) AS info FROM tb_ebook;
 SELECT '电子书文件数量: ' || COUNT(*) AS info FROM tb_ebook_file;
+SELECT '提示：请确保 ebook-storage 目录中存在对应的文件' AS info;
