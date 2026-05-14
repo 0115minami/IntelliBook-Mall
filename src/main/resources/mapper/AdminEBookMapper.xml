@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.intellibookmallapi.mapper.AdminEBookMapper">
+    
+    <!-- 电子书结果映射 -->
+    <resultMap id="AdminEBookResultMap" type="org.example.intellibookmallapi.entity.EBook">
+        <id column="book_id" property="bookId" />
+        <result column="book_title" property="bookTitle" />
+        <result column="author" property="author" />
+        <result column="isbn" property="isbn" />
+        <result column="publisher" property="publisher" />
+        <result column="publish_date" property="publishDate" />
+        <result column="book_intro" property="bookIntro" />
+        <result column="category_id" property="categoryId" />
+        <result column="cover_img" property="coverImg" />
+        <result column="page_count" property="pageCount" />
+        <result column="price" property="price" />
+        <result column="language" property="language" />
+        <result column="tags" property="tags" />
+        <result column="rating" property="rating" />
+        <result column="rating_count" property="ratingCount" />
+        <result column="view_count" property="viewCount" />
+        <result column="download_count" property="downloadCount" />
+        <result column="status" property="status" />
+        <result column="is_deleted" property="isDeleted" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <!-- 关联字段 -->
+        <result column="category_name" property="categoryName" />
+        <result column="available_formats" property="availableFormats" />
+    </resultMap>
+    
+    <!-- 电子书文件结果映射 -->
+    <resultMap id="EBookFileResultMap" type="org.example.intellibookmallapi.entity.EBookFile">
+        <id column="file_id" property="fileId" />
+        <result column="book_id" property="bookId" />
+        <result column="file_format" property="fileFormat" />
+        <result column="file_path" property="filePath" />
+        <result column="file_size" property="fileSize" />
+        <result column="download_count" property="downloadCount" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+    
+    <!-- 基础查询字段 -->
+    <sql id="Base_Column_List">
+        e.book_id, e.book_title, e.author, e.isbn, e.publisher, e.publish_date,
+        e.book_intro, e.category_id, e.cover_img, e.page_count, e.price,
+        e.language, e.tags, e.rating, e.rating_count, e.view_count, e.download_count,
+        e.status, e.is_deleted, e.create_time, e.update_time
+    </sql>
+    
+    <!-- 包含关联信息的查询字段 -->
+    <sql id="Detail_Column_List">
+        <include refid="Base_Column_List" />,
+        c.category_name,
+        GROUP_CONCAT(DISTINCT ef.file_format) as available_formats
+    </sql>
+    
+    <!-- 管理员搜索条件 -->
+    <sql id="Admin_Search_Where_Clause">
+        <where>
+            e.is_deleted = 0
+            <if test="param.keyword != null and param.keyword.trim() != ''">
+                AND (
+                    e.book_title LIKE CONCAT('%', #{param.keyword}, '%')
+                    OR e.author LIKE CONCAT('%', #{param.keyword}, '%')
+                    OR e.isbn LIKE CONCAT('%', #{param.keyword}, '%')
+                    OR e.publisher LIKE CONCAT('%', #{param.keyword}, '%')
+                )
+            </if>
+            <if test="param.categoryId != null">
+                AND e.category_id = #{param.categoryId}
+            </if>
+            <if test="param.status != null and param.status != -1">
+                AND e.status = #{param.status}
+            </if>
+        </where>
+    </sql>
+    
+    <!-- 根据主键查询电子书详情（管理员视图） -->
+    <select id="selectByPrimaryKeyForAdmin" resultMap="AdminEBookResultMap">
+        SELECT 
+            <include refid="Detail_Column_List" />
+        FROM tb_ebook e
+        LEFT JOIN tb_category c ON e.category_id = c.category_id
+        LEFT JOIN tb_ebook_file ef ON e.book_id = ef.book_id
+        WHERE e.book_id = #{bookId} AND e.is_deleted = 0
+        GROUP BY e.book_id
+    </select>
+    
+    <!-- 搜索电子书列表（管理员视图） -->
+    <select id="searchEBooksForAdmin" resultMap="AdminEBookResultMap">
+        SELECT 
+            <include refid="Detail_Column_List" />
+        FROM tb_ebook e
+        LEFT JOIN tb_category c ON e.category_id = c.category_id
+        LEFT JOIN tb_ebook_file ef ON e.book_id = ef.book_id
+        <include refid="Admin_Search_Where_Clause" />
+        GROUP BY e.book_id
+        ORDER BY ${param.sqlOrderBy}
+        LIMIT #{param.offset}, #{param.limit}
+    </select>
+    
+    <!-- 统计搜索结果总数（管理员视图） -->
+    <select id="countSearchEBooksForAdmin" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT e.book_id)
+        FROM tb_ebook e
+        <include refid="Admin_Search_Where_Clause" />
+    </select>
+    
+    <!-- 插入电子书 -->
+    <insert id="insertEBook" parameterType="org.example.intellibookmallapi.entity.EBook" useGeneratedKeys="true" keyProperty="bookId">
+        INSERT INTO tb_ebook (
+            book_title, author, isbn, publisher, publish_date,
+            book_intro, category_id, cover_img, page_count, price,
+            language, tags, rating, rating_count, view_count, download_count,
+            status, is_deleted, create_time, update_time
+        ) VALUES (
+            #{bookTitle}, #{author}, #{isbn}, #{publisher}, #{publishDate},
+            #{bookIntro}, #{categoryId}, #{coverImg}, #{pageCount}, #{price},
+            #{language}, #{tags}, #{rating}, #{ratingCount}, #{viewCount}, #{downloadCount},
+            #{status}, #{isDeleted}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+    
+    <!-- 更新电子书 -->
+    <update id="updateEBook" parameterType="org.example.intellibookmallapi.entity.EBook">
+        UPDATE tb_ebook
+        <set>
+            <if test="bookTitle != null and bookTitle != ''">
+                book_title = #{bookTitle},
+            </if>
+            <if test="author != null and author != ''">
+                author = #{author},
+            </if>
+            <if test="isbn != null">
+                isbn = #{isbn},
+            </if>
+            <if test="publisher != null">
+                publisher = #{publisher},
+            </if>
+            <if test="publishDate != null">
+                publish_date = #{publishDate},
+            </if>
+            <if test="bookIntro != null">
+                book_intro = #{bookIntro},
+            </if>
+            <if test="categoryId != null">
+                category_id = #{categoryId},
+            </if>
+            <if test="coverImg != null">
+                cover_img = #{coverImg},
+            </if>
+            <if test="pageCount != null">
+                page_count = #{pageCount},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="language != null">
+                language = #{language},
+            </if>
+            <if test="tags != null">
+                tags = #{tags},
+            </if>
+            update_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE book_id = #{bookId} AND is_deleted = 0
+    </update>
+    
+    <!-- 更新电子书状态 -->
+    <update id="updateEBookStatus">
+        UPDATE tb_ebook
+        SET status = #{status},
+            update_time = CURRENT_TIMESTAMP
+        WHERE book_id = #{bookId} AND is_deleted = 0
+    </update>
+    
+    <!-- 批量更新电子书状态 -->
+    <update id="batchUpdateEBookStatus">
+        UPDATE tb_ebook
+        SET status = #{status},
+            update_time = CURRENT_TIMESTAMP
+        WHERE book_id IN
+        <foreach collection="bookIds" item="bookId" open="(" separator="," close=")">
+            #{bookId}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+    
+    <!-- 逻辑删除电子书 -->
+    <update id="deleteEBook">
+        UPDATE tb_ebook
+        SET is_deleted = 1,
+            update_time = CURRENT_TIMESTAMP
+        WHERE book_id = #{bookId} AND is_deleted = 0
+    </update>
+    
+    <!-- 批量逻辑删除电子书 -->
+    <update id="batchDeleteEBooks">
+        UPDATE tb_ebook
+        SET is_deleted = 1,
+            update_time = CURRENT_TIMESTAMP
+        WHERE book_id IN
+        <foreach collection="bookIds" item="bookId" open="(" separator="," close=")">
+            #{bookId}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+    
+    <!-- 根据ISBN查询电子书（管理员视图） -->
+    <select id="selectByIsbnForAdmin" resultMap="AdminEBookResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />
+        FROM tb_ebook e
+        WHERE e.isbn = #{isbn} AND e.is_deleted = 0
+    </select>
+    
+    <!-- 插入电子书文件 -->
+    <insert id="insertEBookFile" parameterType="org.example.intellibookmallapi.entity.EBookFile" useGeneratedKeys="true" keyProperty="fileId">
+        INSERT INTO tb_ebook_file (
+            book_id, file_format, file_path, file_size, download_count, create_time, update_time
+        ) VALUES (
+            #{bookId}, #{fileFormat}, #{filePath}, #{fileSize}, #{downloadCount}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+    
+    <!-- 根据文件ID查询电子书文件 -->
+    <select id="selectEBookFileById" resultMap="EBookFileResultMap">
+        SELECT file_id, book_id, file_format, file_path, file_size, download_count, create_time, update_time
+        FROM tb_ebook_file
+        WHERE file_id = #{fileId}
+    </select>
+    
+    <!-- 删除电子书文件 -->
+    <delete id="deleteEBookFile">
+        DELETE FROM tb_ebook_file
+        WHERE file_id = #{fileId}
+    </delete>
+    
+    <!-- 根据书籍ID和格式查询文件 -->
+    <select id="selectEBookFileByBookIdAndFormat" resultMap="EBookFileResultMap">
+        SELECT file_id, book_id, file_format, file_path, file_size, download_count, create_time, update_time
+        FROM tb_ebook_file
+        WHERE book_id = #{bookId} AND UPPER(file_format) = UPPER(#{format})
+    </select>
+    
+</mapper>

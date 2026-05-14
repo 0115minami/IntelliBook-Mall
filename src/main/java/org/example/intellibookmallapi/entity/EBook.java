@@ -91,9 +91,24 @@ public class EBook {
     private Integer ratingCount;
     
     /**
+     * 浏览次数
+     */
+    private Integer viewCount;
+    
+    /**
+     * 下载次数
+     */
+    private Integer downloadCount;
+    
+    /**
      * 状态（1-上架 0-下架）
      */
     private Integer status;
+    
+    /**
+     * 是否删除（0-未删除 1-已删除）
+     */
+    private Integer isDeleted;
     
     /**
      * 创建时间

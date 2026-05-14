@@ -35,7 +35,17 @@ public class EBookFile {
     private Long fileSize;
     
     /**
+     * 下载次数
+     */
+    private Integer downloadCount;
+    
+    /**
      * 创建时间
      */
     private Date createTime;
+    
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
 }

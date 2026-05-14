@@ -1,6 +1,7 @@
 package org.example.intellibookmallapi.config;
 
 import org.example.intellibookmallapi.entity.User;
+import org.example.intellibookmallapi.interceptor.AdminInterceptor;
 import org.example.intellibookmallapi.interceptor.JwtInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -25,11 +26,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Autowired
     private JwtInterceptor jwtInterceptor;
     
+    @Autowired
+    private AdminInterceptor adminInterceptor;
+    
     /**
      * 注册拦截器
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // JWT拦截器：验证所有需要登录的接口
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")  // 拦截所有API请求
                 .excludePathPatterns(
@@ -49,6 +54,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         // 文件服务 - 无需登录（公开访问）
                         "/files/**"               // 封面图片和电子书文件下载
                 );
+        
+        // 管理员拦截器：验证所有管理员接口
+        registry.addInterceptor(adminInterceptor)
+                .addPathPatterns("/api/admin/**");  // 拦截所有管理员接口
     }
     
     /**
