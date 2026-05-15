@@ -27,4 +27,9 @@ public interface OrderItemMapper {
      * 统计订单的商品数量
      */
     int countByOrderId(@Param("orderId") Long orderId);
+    
+    /**
+     * 查询用户购买的所有图书ID（用于推荐系统，只查询已支付订单）
+     */
+    List<Long> selectPurchasedBookIdsByUserId(@Param("userId") Long userId);
 }

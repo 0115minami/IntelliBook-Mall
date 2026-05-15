@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.intellibookmallapi.mapper.UserInterestMapper">
+    
+    <!-- 用户兴趣结果映射 -->
+    <resultMap id="UserInterestResultMap" type="org.example.intellibookmallapi.entity.UserInterest">
+        <id column="interest_id" property="interestId" />
+        <result column="user_id" property="userId" />
+        <result column="category_id" property="categoryId" />
+        <result column="create_time" property="createTime" />
+        <result column="category_name" property="categoryName" />
+    </resultMap>
+    
+    <!-- 添加用户兴趣 -->
+    <insert id="insert" parameterType="org.example.intellibookmallapi.entity.UserInterest" 
+            useGeneratedKeys="true" keyProperty="interestId">
+        INSERT INTO tb_user_interest (user_id, category_id, create_time)
+        VALUES (#{userId}, #{categoryId}, CURRENT_TIMESTAMP)
+    </insert>
+    
+    <!-- 批量添加用户兴趣 -->
+    <insert id="batchInsert">
+        INSERT INTO tb_user_interest (user_id, category_id, create_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.userId}, #{item.categoryId}, CURRENT_TIMESTAMP)
+        </foreach>
+    </insert>
+    
+    <!-- 删除用户兴趣 -->
+    <delete id="deleteByUserIdAndCategoryId">
+        DELETE FROM tb_user_interest
+        WHERE user_id = #{userId} AND category_id = #{categoryId}
+    </delete>
+    
+    <!-- 查询用户的所有兴趣（带分类名称） -->
+    <select id="selectByUserId" resultMap="UserInterestResultMap">
+        SELECT 
+            ui.interest_id,
+            ui.user_id,
+            ui.category_id,
+            ui.create_time,
+            c.category_name
+        FROM tb_user_interest ui
+        LEFT JOIN tb_category c ON ui.category_id = c.category_id
+        WHERE ui.user_id = #{userId}
+        ORDER BY ui.create_time DESC
+    </select>
+    
+    <!-- 检查用户是否已添加某个分类为兴趣 -->
+    <select id="selectByUserIdAndCategoryId" resultMap="UserInterestResultMap">
+        SELECT interest_id, user_id, category_id, create_time
+        FROM tb_user_interest
+        WHERE user_id = #{userId} AND category_id = #{categoryId}
+    </select>
+    
+    <!-- 查询用户兴趣数量 -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_user_interest
+        WHERE user_id = #{userId}
+    </select>
+    
+    <!-- 查询某个分类被多少用户添加为兴趣 -->
+    <select id="countByCategoryId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_user_interest
+        WHERE category_id = #{categoryId}
+    </select>
+    
+    <!-- 查询用户的所有兴趣分类ID（用于推荐系统） -->
+    <select id="selectCategoryIdsByUserId" resultType="long">
+        SELECT category_id
+        FROM tb_user_interest
+        WHERE user_id = #{userId}
+    </select>
+    
+</mapper>

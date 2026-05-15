@@ -33,4 +33,14 @@
         WHERE order_id = #{orderId}
     </select>
     
+    <!-- 查询用户购买的所有图书ID（用于推荐系统，只查询已支付订单） -->
+    <select id="selectPurchasedBookIdsByUserId" resultType="long">
+        SELECT DISTINCT oi.book_id
+        FROM tb_order_item oi
+        INNER JOIN tb_order o ON oi.order_id = o.order_id
+        WHERE o.user_id = #{userId}
+          AND o.pay_status = 1
+          AND o.is_deleted = 0
+    </select>
+    
 </mapper>

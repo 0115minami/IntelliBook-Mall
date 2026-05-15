@@ -66,4 +66,10 @@ public interface ReviewMapper {
      * 计算书籍的平均评分
      */
     Double calculateAverageRating(Long bookId);
+    
+    /**
+     * 查询用户评价过的图书及评分（用于推荐系统）
+     * @return Map<bookId, rating>
+     */
+    List<Review> selectReviewedBooksWithRatingByUserId(@Param("userId") Long userId);
 }

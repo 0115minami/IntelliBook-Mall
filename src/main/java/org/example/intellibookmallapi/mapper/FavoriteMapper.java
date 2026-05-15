@@ -44,4 +44,9 @@ public interface FavoriteMapper {
      * 检查是否已收藏
      */
     int checkFavorite(@Param("userId") Long userId, @Param("bookId") Long bookId);
+    
+    /**
+     * 查询用户收藏的所有图书ID（用于推荐系统）
+     */
+    List<Long> selectBookIdsByUserId(@Param("userId") Long userId);
 }

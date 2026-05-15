@@ -83,4 +83,11 @@
         WHERE user_id = #{userId} AND book_id = #{bookId}
     </select>
     
+    <!-- 查询用户收藏的所有图书ID（用于推荐系统） -->
+    <select id="selectBookIdsByUserId" resultType="long">
+        SELECT book_id
+        FROM tb_favorite
+        WHERE user_id = #{userId}
+    </select>
+    
 </mapper>

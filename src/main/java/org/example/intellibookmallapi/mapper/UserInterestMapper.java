@@ -46,4 +46,9 @@ public interface UserInterestMapper {
      * 查询某个分类被多少用户添加为兴趣
      */
     int countByCategoryId(@Param("categoryId") Long categoryId);
+    
+    /**
+     * 查询用户的所有兴趣分类ID（用于推荐系统）
+     */
+    List<Long> selectCategoryIdsByUserId(@Param("userId") Long userId);
 }

@@ -131,6 +131,11 @@ public class EBook {
     private String availableFormats;
     
     /**
+     * 临时分数（用于推荐系统排序，不持久化到数据库）
+     */
+    private transient Double tempScore;
+    
+    /**
      * 获取标签数组
      */
     public String[] getTagArray() {

@@ -152,4 +152,11 @@
         WHERE book_id = #{bookId} AND is_deleted = 0
     </select>
     
+    <!-- 查询用户评价过的图书及评分（用于推荐系统） -->
+    <select id="selectReviewedBooksWithRatingByUserId" resultMap="BaseResultMap">
+        SELECT book_id, rating
+        FROM tb_review
+        WHERE user_id = #{userId} AND is_deleted = 0
+    </select>
+    
 </mapper>
