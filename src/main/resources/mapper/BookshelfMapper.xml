@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.intellibookmallapi.mapper.BookshelfMapper">
+
+    <!-- BookshelfVO 结果映射 -->
+    <resultMap id="BookshelfVOMap" type="org.example.intellibookmallapi.dto.BookshelfVO">
+        <id column="book_id" property="bookId"/>
+        <result column="book_title" property="bookTitle"/>
+        <result column="author" property="author"/>
+        <result column="cover_img" property="coverImg"/>
+        <result column="category_name" property="categoryName"/>
+        <result column="price" property="price"/>
+        <result column="rating" property="rating"/>
+        <result column="rating_count" property="ratingCount"/>
+        <result column="purchase_time" property="purchaseTime"/>
+        <result column="order_id" property="orderId"/>
+        <result column="last_read_time" property="lastReadTime"/>
+        <result column="last_read_format" property="lastReadFormat"/>
+        <result column="last_position" property="lastPosition"/>
+        <result column="has_reading_progress" property="hasReadingProgress"/>
+        <result column="available_formats" property="availableFormats"/>
+    </resultMap>
+
+    <!-- ReadingProgress 结果映射 -->
+    <resultMap id="ReadingProgressMap" type="org.example.intellibookmallapi.entity.ReadingProgress">
+        <id column="progress_id" property="progressId"/>
+        <result column="user_id" property="userId"/>
+        <result column="book_id" property="bookId"/>
+        <result column="file_format" property="fileFormat"/>
+        <result column="last_position" property="lastPosition"/>
+        <result column="last_read_time" property="lastReadTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 查询用户已购买的图书列表 -->
+    <select id="selectPurchasedBooks" resultMap="BookshelfVOMap">
+        SELECT DISTINCT
+            e.book_id,
+            e.book_title,
+            e.author,
+            e.cover_img,
+            c.category_name,
+            e.price,
+            e.rating,
+            e.rating_count,
+            o.create_time AS purchase_time,
+            o.order_id,
+            rp.last_read_time,
+            rp.file_format AS last_read_format,
+            rp.last_position,
+            CASE WHEN rp.progress_id IS NOT NULL THEN 1 ELSE 0 END AS has_reading_progress,
+            GROUP_CONCAT(DISTINCT ef.file_format) AS available_formats
+        FROM tb_ebook e
+        INNER JOIN tb_order_item oi ON e.book_id = oi.book_id
+        INNER JOIN tb_order o ON oi.order_id = o.order_id
+        LEFT JOIN tb_category c ON e.category_id = c.category_id
+        LEFT JOIN tb_reading_progress rp ON e.book_id = rp.book_id AND rp.user_id = #{userId}
+        LEFT JOIN tb_ebook_file ef ON e.book_id = ef.book_id
+        WHERE o.user_id = #{userId}
+          AND o.pay_status = 1
+          AND o.is_deleted = 0
+          AND e.is_deleted = 0
+        GROUP BY e.book_id, o.order_id, rp.last_read_time, rp.file_format, rp.last_position, rp.progress_id
+        <choose>
+            <when test="sortBy == 'recent'">
+                ORDER BY CASE WHEN rp.last_read_time IS NULL THEN 1 ELSE 0 END, rp.last_read_time DESC, o.create_time DESC
+            </when>
+            <when test="sortBy == 'purchase'">
+                ORDER BY o.create_time DESC
+            </when>
+            <when test="sortBy == 'title'">
+                ORDER BY e.book_title ASC
+            </when>
+            <otherwise>
+                ORDER BY CASE WHEN rp.last_read_time IS NULL THEN 1 ELSE 0 END, rp.last_read_time DESC, o.create_time DESC
+            </otherwise>
+        </choose>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 统计用户已购买的图书总数 -->
+    <select id="countPurchasedBooks" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT e.book_id)
+        FROM tb_ebook e
+        INNER JOIN tb_order_item oi ON e.book_id = oi.book_id
+        INNER JOIN tb_order o ON oi.order_id = o.order_id
+        WHERE o.user_id = #{userId}
+          AND o.pay_status = 1
+          AND o.is_deleted = 0
+          AND e.is_deleted = 0
+    </select>
+
+    <!-- 检查用户是否已购买某本书 -->
+    <select id="checkPurchased" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0
+        FROM tb_order o
+        INNER JOIN tb_order_item oi ON o.order_id = oi.order_id
+        WHERE o.user_id = #{userId}
+          AND oi.book_id = #{bookId}
+          AND o.pay_status = 1
+          AND o.is_deleted = 0
+    </select>
+
+    <!-- 查询用户对某本书的阅读进度 -->
+    <select id="selectReadingProgress" resultMap="ReadingProgressMap">
+        SELECT *
+        FROM tb_reading_progress
+        WHERE user_id = #{userId}
+          AND book_id = #{bookId}
+        ORDER BY last_read_time DESC
+    </select>
+
+    <!-- 插入或更新阅读进度 -->
+    <insert id="upsertReadingProgress">
+        INSERT INTO tb_reading_progress (user_id, book_id, file_format, last_position, last_read_time, create_time, update_time)
+        VALUES (#{userId}, #{bookId}, #{fileFormat}, #{lastPosition}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT(user_id, book_id, file_format)
+        DO UPDATE SET
+            last_position = excluded.last_position,
+            last_read_time = CURRENT_TIMESTAMP,
+            update_time = CURRENT_TIMESTAMP
+    </insert>
+
+    <!-- 查询图书的可用文件格式 -->
+    <select id="selectAvailableFormats" resultType="java.lang.String">
+        SELECT file_format
+        FROM tb_ebook_file
+        WHERE book_id = #{bookId}
+        ORDER BY file_format
+    </select>
+
+</mapper>
