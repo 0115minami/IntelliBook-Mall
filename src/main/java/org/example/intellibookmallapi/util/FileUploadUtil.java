@@ -87,7 +87,7 @@ public class FileUploadUtil {
         }
         
         try {
-            Path oldPath = Paths.get(basePath, tempPath);
+            Path oldPath = Paths.get(basePath, tempPath).toAbsolutePath();
             if (!Files.exists(oldPath)) {
                 return tempPath;
             }
@@ -95,7 +95,7 @@ public class FileUploadUtil {
             String extension = getFileExtension(tempPath);
             String newFilename = bookId + "." + extension;
             String newRelativePath = "covers/" + newFilename;
-            Path newPath = Paths.get(basePath, newRelativePath);
+            Path newPath = Paths.get(basePath, newRelativePath).toAbsolutePath();
             
             Files.move(oldPath, newPath);
             return newRelativePath;
@@ -172,7 +172,7 @@ public class FileUploadUtil {
         }
         
         try {
-            Path filePath = Paths.get(basePath, relativePath);
+            Path filePath = Paths.get(basePath, relativePath).toAbsolutePath();
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
             // 删除失败不抛异常，只记录日志
@@ -188,12 +188,14 @@ public class FileUploadUtil {
      */
     private static void saveFile(MultipartFile file, String relativePath) {
         try {
-            Path filePath = Paths.get(basePath, relativePath);
+            // 必须使用绝对路径：MultipartFile.transferTo() 对相对路径的解析
+            // 基于 Tomcat 临时目录而非 JVM user.dir，会导致 FileNotFoundException
+            Path filePath = Paths.get(basePath, relativePath).toAbsolutePath();
             
             // 创建目录
             Files.createDirectories(filePath.getParent());
             
-            // 保存文件
+            // 保存文件（使用绝对路径）
             file.transferTo(filePath.toFile());
         } catch (IOException e) {
             throw new BusinessException("文件保存失败：" + e.getMessage());

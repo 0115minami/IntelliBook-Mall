@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.intellibookmallapi.mapper.AdminUserMapper">
+
+    <resultMap id="AdminUserVOMap" type="org.example.intellibookmallapi.dto.AdminUserVO">
+        <result column="user_id"     property="userId" />
+        <result column="username"    property="username" />
+        <result column="nickname"    property="nickname" />
+        <result column="email"       property="email" />
+        <result column="is_admin"    property="isAdmin" />
+        <result column="locked_flag" property="lockedFlag" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 分页查询用户列表 -->
+    <select id="selectUserList" resultMap="AdminUserVOMap">
+        SELECT user_id, username, nickname, email, is_admin, locked_flag, create_time
+        FROM tb_user
+        <where>
+            <if test="param.keyword != null and param.keyword != ''">
+                AND (username LIKE CONCAT('%', #{param.keyword}, '%')
+                  OR email    LIKE CONCAT('%', #{param.keyword}, '%'))
+            </if>
+            <if test="param.lockedFlag != null and param.lockedFlag != -1">
+                AND locked_flag = #{param.lockedFlag}
+            </if>
+        </where>
+        ORDER BY user_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 统计用户总数 -->
+    <select id="countUsers" resultType="long">
+        SELECT COUNT(*)
+        FROM tb_user
+        <where>
+            <if test="param.keyword != null and param.keyword != ''">
+                AND (username LIKE CONCAT('%', #{param.keyword}, '%')
+                  OR email    LIKE CONCAT('%', #{param.keyword}, '%'))
+            </if>
+            <if test="param.lockedFlag != null and param.lockedFlag != -1">
+                AND locked_flag = #{param.lockedFlag}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据ID查询用户详情 -->
+    <select id="selectUserById" resultMap="AdminUserVOMap">
+        SELECT user_id, username, nickname, email, is_admin, locked_flag, create_time
+        FROM tb_user
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 更新锁定状态 -->
+    <update id="updateLockedFlag">
+        UPDATE tb_user
+        SET locked_flag = #{lockedFlag}
+        WHERE user_id = #{userId}
+    </update>
+
+</mapper>
